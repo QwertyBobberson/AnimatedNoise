@@ -102,6 +102,7 @@ struct UniformBufferObject
     float lacunarity;
     float persistence;
     float offsetNoiseWeight;
+	float offsetNoiseScale;
     float amplitude;
     float frequency;
     float zFreq;

@@ -12,6 +12,7 @@ layout(binding = 0) uniform UniformBufferObject
     float lacunarity;
     float persistence;
     float offsetNoiseWeight;
+    float offsetNoiseScale;
     float amplitude;
     float frequency;
     float zFreq;
@@ -75,7 +76,6 @@ float GetPoint(float x, float y, float z)
     return xyz;
 }
 
-#define PrintVar(var) debugPrintfEXT(" is %f\n", var)
 void main()
 {
 
@@ -83,12 +83,25 @@ void main()
     float amplitude = ubo.amplitude;
     float frequency = ubo.frequency;
 
-    float offsetNoise = ubo.offsetNoiseWeight != 0 ? ubo.offsetNoiseWeight * GetPoint(gl_FragCoord.x/(ubo.offsetNoiseWeight/10), gl_FragCoord.y/(ubo.offsetNoiseWeight/10), ubo.z * ubo.zFreq) : 0;
+    float offsetAmp = 1;
+    float offsetFrequency = 1;
+    float offsetLac = 2;
+    float offsetPer = 0.5;
+
+    float offsetNoiseX = 0;
+    float offsetNoiseY = 0;
+    for(int i = 0; i < ubo.octaves; i++)
+    {
+        offsetNoiseX += offsetAmp * ubo.offsetNoiseWeight * GetPoint((gl_FragCoord.x)/(ubo.offsetNoiseScale) * offsetFrequency + (ubo.z * ubo.zFreq*4), (gl_FragCoord.y)/(ubo.offsetNoiseScale) * offsetFrequency + (ubo.z * ubo.zFreq*4), ubo.z * ubo.zFreq);
+        offsetNoiseY += offsetAmp * ubo.offsetNoiseWeight * GetPoint((gl_FragCoord.y + 1000)/(ubo.offsetNoiseScale) * offsetFrequency + (ubo.z * ubo.zFreq*4), (gl_FragCoord.x + 2500)/(ubo.offsetNoiseScale) * offsetFrequency + (ubo.z * ubo.zFreq*4), ubo.z * ubo.zFreq);
+        offsetAmp *= offsetPer;
+        offsetFrequency *= offsetLac;
+    }
 
     for(int i = 0; i < ubo.octaves; i++)
     {
         amplitude *= ubo.persistence;
-        noiseValue += GetPoint((gl_FragCoord.x + offsetNoise)/ubo.scale * frequency, (gl_FragCoord.y + offsetNoise)/ubo.scale * frequency, ubo.z * ubo.zFreq) * amplitude;
+        noiseValue += GetPoint((gl_FragCoord.x + offsetNoiseX)/ubo.scale * frequency, (gl_FragCoord.y + offsetNoiseY)/ubo.scale * frequency, ubo.z * ubo.zFreq) * amplitude;
         frequency *= ubo.lacunarity;
     }
 
