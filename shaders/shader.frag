@@ -1,5 +1,4 @@
 #version 450
-#extension GL_EXT_debug_printf : enable
 
 layout(location = 0) in vec3 fragColor;
 layout(location = 0) out vec4 outColor;
@@ -7,18 +6,17 @@ layout(location = 0) out vec4 outColor;
 layout(binding = 0) uniform UniformBufferObject
 {
     float z;
-    int octaves;
-    float scale;
-    float lacunarity;
-    float persistence;
-    float offsetNoiseWeight;
-    float amplitude;
-    float frequency;
-    float zFreq;
-    float pow;
 } ubo;
 
 
+int octaves = 25;
+float scale = 500;
+float lacunarity = 2;
+float persistence = .5f;
+float offsetNoiseWeight = 10000;
+float offsetNoiseScale = 1000;
+float xOffset = 100;
+float yOffset = 100;
 
 vec3 GenerateVector(int x, int y, int z)
 {
@@ -39,6 +37,7 @@ float SmoothStep(float x, float min, float max)
     return ((x * x * x * (x * (x * 6 - 15) + 10)) * (max-min)) + min;
 }
 
+
 float GetPoint(float x, float y, float z)
 {
     float dotProducts[2][2][2];
@@ -58,11 +57,13 @@ float GetPoint(float x, float y, float z)
                 offset.z = _z - distance.z;
 
                 gradient = GenerateVector(int(x + offset.x), int(y + offset.y), int(z + offset.z));
-
+                
                 dotProducts[_z][_y][_x] = dot(offset, gradient);
             }
         }
     }
+
+
 
     float xy1z1 = SmoothStep(distance.z, dotProducts[0][0][0], dotProducts[1][0][0]);
     float xy2z1 = SmoothStep(distance.z, dotProducts[0][1][0], dotProducts[1][1][0]);
@@ -72,25 +73,23 @@ float GetPoint(float x, float y, float z)
     float xyz2 = SmoothStep(distance.y, xy1z2, xy2z2);
     float xyz = SmoothStep(distance.x, xyz1, xyz2);
 
-    return xyz;
-}
 
-#define PrintVar(var) debugPrintfEXT(" is %f\n", var)
+    return xyz;
+
+}
 void main()
 {
-
+    float amplitude = 2;
+    float frequency = 1;
     float noiseValue = 0;
-    float amplitude = ubo.amplitude;
-    float frequency = ubo.frequency;
+    float zFreq = .25;
 
-    float offsetNoise = ubo.offsetNoiseWeight != 0 ? ubo.offsetNoiseWeight * GetPoint(gl_FragCoord.x/(ubo.offsetNoiseWeight/10), gl_FragCoord.y/(ubo.offsetNoiseWeight/10), ubo.z * ubo.zFreq) : 0;
-
-    for(int i = 0; i < ubo.octaves; i++)
+    float offsetNoise = offsetNoiseWeight * GetPoint(gl_FragCoord.x/offsetNoiseScale, gl_FragCoord.y/offsetNoiseScale, ubo.z * zFreq);
+    for(int i = 0; i < octaves; i++)
     {
-        amplitude *= ubo.persistence;
-        noiseValue += GetPoint((gl_FragCoord.x + offsetNoise)/ubo.scale * frequency, (gl_FragCoord.y + offsetNoise)/ubo.scale * frequency, ubo.z * ubo.zFreq) * amplitude;
-        frequency *= ubo.lacunarity;
+        noiseValue += GetPoint((gl_FragCoord.x + xOffset + offsetNoise)/scale * frequency, (gl_FragCoord.y + yOffset + offsetNoise)/scale * frequency, ubo.z * zFreq) * amplitude;
+        amplitude *= persistence;
+        frequency *= lacunarity;
     }
-
-    outColor = vec4(0, 0, pow(noiseValue, ubo.pow), 1.0);
+    outColor = vec4(0, 0, noiseValue * noiseValue * noiseValue, 1.0);
 }

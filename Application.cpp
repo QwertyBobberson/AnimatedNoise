@@ -20,8 +20,8 @@
 #include <set>
 #include <array>
 
-const uint32_t WIDTH = 1000;
-const uint32_t HEIGHT = 1000;
+const uint32_t WIDTH = 1920;
+const uint32_t HEIGHT = 1200;
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -36,6 +36,9 @@ const bool enableValidationLayers = false;
 #else
 const bool enableValidationLayers = true;
 #endif
+
+
+#define PrintRan(func) func(); std::cout << "Ran " << #func << "\n";
 
 struct Vertex
 {
@@ -96,16 +99,7 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 
 struct UniformBufferObject
 {
-    float z;
-    int octaves;
-    float scale;
-    float lacunarity;
-    float persistence;
-    float offsetNoiseWeight;
-    float amplitude;
-    float frequency;
-    float zFreq;
-	float pow;
+	float z;
 };
 
 struct QueueFamilyIndices
@@ -188,8 +182,6 @@ private:
 
 	uint32_t currentFrame = 0;
 
-	std::string prevFragShader;
-
 	void InitWindow()
 	{
 		glfwInit();
@@ -259,7 +251,7 @@ private:
 		vkFreeMemory(device, indexBufferMemory, nullptr);
 		vkDestroyBuffer(device, vertexBuffer, nullptr);
 		vkFreeMemory(device, vertexBufferMemory, nullptr);
-
+		
 
 		vkDestroyCommandPool(device, commandPool, nullptr);
 
@@ -268,7 +260,7 @@ private:
 		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 		vkDestroyRenderPass(device, renderPass, nullptr);
 
-
+		
 
 		vkDestroyDevice(device, nullptr);
 
@@ -559,7 +551,6 @@ private:
 		auto vertShaderCode = ReadFile("shaders/vert.spv");
 		auto fragShaderCode = ReadFile("shaders/frag.spv");
 
-		prevFragShader = fragShaderCode.data();
 		VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
 		VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
 
@@ -579,10 +570,10 @@ private:
 
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-
+		
 		auto bindingDescription = Vertex::GetBindingDescription();
 		auto attributeDescription = Vertex::GetAttributeDescriptions();
-
+		
 		vertexInputInfo.vertexBindingDescriptionCount = 1;
 		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
 		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescription.size());
@@ -746,7 +737,7 @@ private:
 
 		std::array<VkClearValue, 1> clearValues{};
 		clearValues[0].color = {{0.0f, 0.0f, 0.0f, 1.0f}};
-
+		
 		renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 		renderPassInfo.pClearValues = clearValues.data();
 
@@ -810,15 +801,10 @@ private:
 	void DrawFrame()
 	{
 		vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-		if(prevFragShader != ReadFile("shaders/frag.spv").data())
-		{
-			CreateGraphicsPipeline();
-			std::cout << "Recreating pipeline\n";
-		}
 
 		uint32_t imageIndex;
 		VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
-
+		
 		if(result == VK_ERROR_OUT_OF_DATE_KHR)
 		{
 			RecreateSwapChain();
@@ -1270,24 +1256,8 @@ private:
 		auto currentTime = std::chrono::high_resolution_clock::now();
 		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-		std::ifstream settings("settings.txt");
-
 		UniformBufferObject ubo{};
 		ubo.z = (1.0f * time);
-
-		std::string line;
-		getline(settings, line);
-		int val = std::stoi(line.substr(line.find(":") + 1));
-		ubo.octaves = val;
-		for(int i = 2; i < sizeof(ubo)/4; i++)
-		{
-			std::string line;
-			getline(settings, line);
-			float val = std::stof(line.substr(line.find(":") + 1));
-			float* location = ((float*)&ubo + i);
-			*location = val;
-		}
-		settings.close();
 		void* data;
 		vkMapMemory(device, uniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
 		memcpy(data, &ubo, sizeof(ubo));

@@ -1,9 +1,0 @@
-octaves: 5
-scale: 100
-lacunarity: 2
-persistence: .1
-offsetNoiseWeight: 100000
-amplitude: 50
-frequency: 1
-zFreq: .025
-pow: 100

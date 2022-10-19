@@ -44,6 +44,7 @@ int main(int argc, char** argv)
 	// PNG png = ReadPng("test2.png");
 
 	// std::cout << png.height << " " << png.width << std::endl;
+
 	int sHeight = HEIGHT;
 	int sWidth = WIDTH;
 
@@ -91,13 +92,13 @@ int main(int argc, char** argv)
 
 	// verts.resize(10);
 	// indices.resize(10);
-
+	
 	// std::cout << "Validation Layers: " << enableValidationLayers<< std::endl;
-
+	
 	// PNG png = ReadPng("test.png");
-
-
-	// verts =
+	
+	
+	// verts = 
 	// {
 	// 	{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
 	// 	{{ 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
@@ -105,9 +106,9 @@ int main(int argc, char** argv)
 	// 	{{-0.5f,  0.5f}, {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f}}
 	// };
 
-	// indices =
+	// indices = 
 	// {
-	// 	0, 1, 2,
+	// 	0, 1, 2, 
 	// 	2, 3, 0
 	// };
 
@@ -142,5 +143,5 @@ int main(int argc, char** argv)
 	}
 
 	return EXIT_SUCCESS;
-
+	
 }
